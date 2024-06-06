@@ -1,0 +1,7 @@
+SENDER_DATA_COMP_ID = 'SENDER'
+
+TARGET_COMP_ID = 'TARGET'
+
+USERNAME = 'username'
+
+PASSWORD = 'password'
