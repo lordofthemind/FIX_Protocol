@@ -1,8 +1,11 @@
 import quickfix as fix
 import logging
 import time
-from fix_messages import create_logon_message, create_heartbeat_message, create_logout_message, send_message
 import cred
+from fix_messages import (
+    create_logon_message, create_heartbeat_message, create_logout_message,
+    create_order_message, send_message
+)
 
 SENDER_DATA_COMP_ID = cred.SENDER_DATA_COMP_ID
 
@@ -12,6 +15,8 @@ USERNAME = cred.USERNAME
 
 PASSWORD = cred.PASSWORD
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class Application(fix.Application):
     def onCreate(self, sessionID):
@@ -60,21 +65,27 @@ if __name__ == '__main__':
     config_file = 'data_config.cfg'
     username = USERNAME
     password = PASSWORD
+    sender_comp_id = SENDER_DATA_COMP_ID
+    target_comp_id = TARGET_COMP_ID
     initiator = create_fix_session(config_file)
 
     if initiator:
         time.sleep(5)  # Wait for the session to be established
-        sessionID = fix.SessionID('FIX.4.4', SENDER_DATA_COMP_ID, TARGET_COMP_ID)  # Modify as per your configuration
+        sessionID = fix.SessionID('FIX.4.4', sender_comp_id, target_comp_id)  # Modify as per your configuration
 
-        logon_message = create_logon_message(username, password, SENDER_DATA_COMP_ID, TARGET_COMP_ID)
+        logon_message = create_logon_message(username, password, sender_comp_id, target_comp_id)
         send_message(sessionID, logon_message)
         time.sleep(2)  # Wait for logon acknowledgment
 
-        heartbeat_message = create_heartbeat_message()
+        heartbeat_message = create_heartbeat_message(sender_comp_id, target_comp_id)
         send_message(sessionID, heartbeat_message)
         time.sleep(10)  # Keep the session alive for some time
 
-        logout_message = create_logout_message()
+        order_message = create_order_message(sender_comp_id, target_comp_id, 'AAPL', 100, 150.00, fix.Side_BUY, fix.OrdType_LIMIT)
+        send_message(sessionID, order_message)
+        time.sleep(2)  # Wait for order acknowledgment
+
+        logout_message = create_logout_message(sender_comp_id, target_comp_id)
         send_message(sessionID, logout_message)
 
         initiator.stop()
